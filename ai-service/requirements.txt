@@ -1,3 +1,9 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
+httpx==0.28.1
+torch>=2.2
+transformers>=4.40
+sentencepiece>=0.2
+indictranstoolkit @ git+https://github.com/AI4Bharat/IndicTrans2.git#subdirectory=IndicTransToolkit
+# Install IndicF5 from its official repository as documented in README.

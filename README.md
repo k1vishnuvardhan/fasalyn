@@ -53,3 +53,17 @@ This first prototype is deliberately demo-open (no sign-in required). Use **Demo
 The supplied data layer is in-memory. Add MongoDB models for User, Farm, Subplot, Crop, Case, Diagnosis, PestObservation, TrapObservation, RiskAssessment, PropagationPrediction, Advisory, FollowUp, OfficerValidation, RegionalSignal and Notification before deployment. The AI result is deterministic and no agricultural chemical recommendation is generated. Integrate authenticated users, Open-Meteo, object storage, a reviewed advisory library, background queues and a trained, evaluated disease/pest model before real-world use.
 
 Deploy the frontend to Vercel/Netlify, the API and AI service to Render/Railway/container infrastructure, and host MongoDB through Atlas or an approved government deployment environment. Set the environment variables in `backend/.env.example` through the host secret manager.
+
+## Real multilingual translation and voice
+
+Static UI is localized in English, Telugu and Hindi. Dynamic farmer content is sent through Node endpoints `/api/translate` and `/api/tts` to the separate Python service. That service uses AI4Bharat IndicTrans2 and IndicF5, and returns an honest `503` when the official models are unavailable; it never sends placeholder translations or audio.
+
+```powershell
+python -m venv ai-service/.venv
+ai-service/.venv/Scripts/pip install -r ai-service/requirements.txt
+# Install IndicF5 from https://github.com/AI4Bharat/IndicF5 using its official instructions.
+Copy-Item ai-service/.env.example ai-service/.env
+ai-service/.venv/Scripts/uvicorn main:app --app-dir ai-service --reload --port 8000
+```
+
+Set `INDICTRANS2_MODEL_ID` to an official supported IndicTrans2 checkpoint and `INDICF5_MODEL_PATH` to the official IndicF5 checkpoint. CPU development is supported with `FORCE_CPU=1`, but GPU is recommended for production model latency. `GET /health` reports each model's readiness; run `python -m pytest ai-service/tests` for API validation.
