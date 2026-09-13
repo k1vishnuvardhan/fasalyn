@@ -21,7 +21,7 @@ npm run install:all
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API listens at `http://localhost:4000`.
+Open `http://localhost:5174`. The API listens at `http://localhost:4000`.
 
 Run the AI boundary separately:
 

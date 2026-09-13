@@ -1,0 +1,5 @@
+const NAME='fasalyn-offline',STORE='queue';
+function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open(NAME,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+export async function queueItem(type,payload){const d=await db();const item={id:crypto.randomUUID(),type,payload,createdAt:new Date().toISOString()};return new Promise((resolve,reject)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).add(item);r.onsuccess=()=>resolve(item);r.onerror=()=>reject(r.error)})}
+export async function queuedItems(){const d=await db();return new Promise((resolve,reject)=>{const r=d.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+export async function clearQueue(){const d=await db();return new Promise((resolve,reject)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).clear();r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
