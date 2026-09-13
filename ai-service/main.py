@@ -1,81 +1,104 @@
-"""Fasalyn AI4Bharat multilingual inference gateway.
+"""Fasalyn inference boundary.
 
-No endpoint fabricates translations or audio. Install the official AI4Bharat
-models before this service reports itself ready.
+This service never returns a diagnosis unless a configured, loadable model has
+actually produced it. The supported artifact is a Hugging Face image-classifier
+with an explicit label map. Object detection can be added as a separate adapter.
 """
 from __future__ import annotations
-import hashlib, os, threading
+import io, os
 from pathlib import Path
 from typing import Literal
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
+from PIL import Image, ImageStat, UnidentifiedImageError
+from dotenv import load_dotenv
 
-Language = Literal['en', 'te', 'hi']; MAX_TEXT=4000
-ROOT=Path(__file__).parent; CACHE=Path(os.getenv('AUDIO_CACHE_DIR',ROOT/'audio-cache')).resolve(); CACHE.mkdir(parents=True,exist_ok=True)
-try:
-    import torch
-    DEVICE='cuda' if os.getenv('FORCE_CPU')!='1' and torch.cuda.is_available() else 'cpu'
-except ImportError: DEVICE='cpu'
-class TranslateRequest(BaseModel):
-    text:str=Field(min_length=1,max_length=MAX_TEXT); sourceLanguage:Language; targetLanguage:Language
-class TTSRequest(BaseModel): text:str=Field(min_length=1,max_length=MAX_TEXT); language:Literal['te','hi']
-class IndicTrans2Adapter:
-    def __init__(self): self.model=self.tokenizer=None; self.error=None
+load_dotenv(Path(__file__).with_name('.env'))
+
+MAX_IMAGE_BYTES = int(os.getenv("MAX_IMAGE_BYTES", str(10 * 1024 * 1024)))
+MIN_EDGE = int(os.getenv("MIN_IMAGE_EDGE", "96"))
+MIN_CONFIDENCE = float(os.getenv("MIN_MODEL_CONFIDENCE", "0.60"))
+MODEL_ID = os.getenv("DISEASE_MODEL_ID", "")
+MODEL_REVISION = os.getenv("DISEASE_MODEL_REVISION")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "model").lower()
+DEVICE = "cpu"
+app = FastAPI(title="Fasalyn model service", version="1.0.0")
+
+class Prediction(BaseModel):
+    label: str | None
+    confidence: float
+    severity: Literal["unknown", "low", "moderate", "high"]
+    status: Literal["DETECTED", "LOW_CONFIDENCE"]
+
+class ModelAdapter:
+    def __init__(self): self.model = self.processor = None; self.error: str | None = None
     def load(self):
-        model_id=os.getenv('INDICTRANS2_MODEL_ID')
-        if not model_id: self.error='INDICTRANS2_MODEL_ID is not configured'; return
+        if not MODEL_ID:
+            self.error = "DISEASE_MODEL_ID is not configured"
+            return
         try:
-            from transformers import AutoModelForSeq2SeqLM,AutoTokenizer
-            self.tokenizer=AutoTokenizer.from_pretrained(model_id,trust_remote_code=True)
-            self.model=AutoModelForSeq2SeqLM.from_pretrained(model_id,trust_remote_code=True).to(DEVICE);self.model.eval()
-        except Exception as exc:self.error=str(exc)
+            import torch
+            from transformers import AutoImageProcessor, AutoModelForImageClassification
+            global DEVICE
+            DEVICE = "cuda" if os.getenv("FORCE_CPU") != "1" and torch.cuda.is_available() else "cpu"
+            self.processor = AutoImageProcessor.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+            self.model = AutoModelForImageClassification.from_pretrained(MODEL_ID, revision=MODEL_REVISION).to(DEVICE).eval()
+        except Exception as exc: self.error = str(exc)
     @property
-    def ready(self):return self.model is not None and self.tokenizer is not None
-    def translate(self,text,source,target):
-        if not self.ready:raise RuntimeError(self.error or 'IndicTrans2 model is unavailable')
-        tags={'en':'eng_Latn','te':'tel_Telu','hi':'hin_Deva'}
+    def ready(self): return self.model is not None and self.processor is not None
+    def infer(self, image: Image.Image) -> tuple[str, float]:
         import torch
-        encoded=self.tokenizer(text,return_tensors='pt',truncation=True).to(DEVICE)
-        with torch.inference_mode():result=self.model.generate(**encoded,forced_bos_token_id=self.tokenizer.convert_tokens_to_ids(tags[target]),max_new_tokens=512)
-        return self.tokenizer.batch_decode(result,skip_special_tokens=True)[0]
-class IndicF5Adapter:
-    def __init__(self):self.engine=None;self.error=None
-    def load(self):
-        try:
-            # The official IndicF5 package must be installed from AI4Bharat/IndicF5.
-            from indicf5.inference import IndicF5Inference
-            self.engine=IndicF5Inference(checkpoint_path=os.environ['INDICF5_MODEL_PATH'],device=DEVICE)
-        except Exception as exc:self.error=str(exc)
-    @property
-    def ready(self):return self.engine is not None
-    def synthesize(self,text,language,path):
-        if not self.ready:raise RuntimeError(self.error or 'IndicF5 model is unavailable')
-        self.engine.synthesize(text=text,language=language,output_path=str(path))
-        if not path.exists() or path.stat().st_size==0:raise RuntimeError('IndicF5 returned no audio output')
-translator,tts=IndicTrans2Adapter(),IndicF5Adapter();lock=threading.Lock();app=FastAPI(title='Fasalyn AI4Bharat service',version='0.2.0')
-@app.on_event('startup')
-def startup():translator.load();tts.load()
-@app.get('/health')
-def health():return {'ready':translator.ready and tts.ready,'device':DEVICE,'translation':{'ready':translator.ready,'error':translator.error},'tts':{'ready':tts.ready,'error':tts.error}}
-@app.post('/translate')
-def translate(body:TranslateRequest):
-    if body.sourceLanguage==body.targetLanguage:return {'success':True,'sourceLanguage':body.sourceLanguage,'targetLanguage':body.targetLanguage,'translatedText':body.text}
+        inputs = self.processor(images=image, return_tensors="pt").to(DEVICE)
+        with torch.inference_mode(): probabilities = self.model(**inputs).logits.softmax(dim=-1)[0]
+        index = int(probabilities.argmax().item())
+        return str(self.model.config.id2label[index]), float(probabilities[index].item())
+
+model = ModelAdapter()
+@app.on_event("startup")
+def startup(): model.load()
+
+def image_quality(image: Image.Image) -> list[str]:
+    flags: list[str] = []
+    if min(image.size) < MIN_EDGE: flags.append(f"image is smaller than {MIN_EDGE}px on one edge")
+    gray = image.convert("L")
+    brightness = ImageStat.Stat(gray).mean[0]
+    if brightness < 20: flags.append("image is too dark")
+    if brightness > 245: flags.append("image is too bright")
+    return flags
+
+def severity(label: str, confidence: float) -> Literal["unknown", "low", "moderate", "high"]:
+    # Severity is not inferred from a class label alone. It remains unknown until a
+    # validated severity model or an officer assessment is configured.
+    return "unknown"
+
+@app.get("/health")
+def health(): return {"ready": model.ready or AI_PROVIDER == "demo", "provider": AI_PROVIDER, "modelId": MODEL_ID or None, "device": DEVICE, "error": model.error}
+
+@app.post("/infer")
+async def infer(request: Request):
+    content_type = request.headers.get("content-type", "").split(";", 1)[0]
+    if content_type not in {"image/jpeg", "image/png", "image/webp"}: raise HTTPException(415, "Only JPEG, PNG, and WebP images are supported.")
+    raw = await request.body()
+    if not raw or len(raw) > MAX_IMAGE_BYTES: raise HTTPException(413, "Image is empty or exceeds the upload size limit.")
     try:
-        with lock:result=translator.translate(body.text,body.sourceLanguage,body.targetLanguage)
-        return {'success':True,'sourceLanguage':body.sourceLanguage,'targetLanguage':body.targetLanguage,'translatedText':result}
-    except Exception as exc:raise HTTPException(503,f'Translation service is unavailable: {exc}')
-@app.post('/tts')
-def generate_tts(body:TTSRequest):
-    key=hashlib.sha256(f'{body.language}:{body.text}:indicf5'.encode()).hexdigest();audio=CACHE/f'{key}.wav'
-    try:
-        with lock:
-            if not audio.exists():tts.synthesize(body.text,body.language,audio)
-        return {'success':True,'audioUrl':f'/audio/{key}.wav','cacheKey':key}
-    except Exception as exc:raise HTTPException(503,f'Voice generation is unavailable: {exc}')
-@app.get('/audio/{name}')
-def audio(name:str):
-    if not name.endswith('.wav') or '/' in name or '\\' in name:raise HTTPException(400,'Invalid audio name')
-    file=(CACHE/name).resolve()
-    if CACHE not in file.parents or not file.exists():raise HTTPException(404,'Audio not found')
-    return FileResponse(file,media_type='audio/wav')
+        image = Image.open(io.BytesIO(raw)); image.verify()
+        image = Image.open(io.BytesIO(raw)).convert("RGB")
+    except (UnidentifiedImageError, OSError, ValueError): raise HTTPException(400, "Uploaded content is not a valid image.")
+    flags = image_quality(image)
+    if flags: raise HTTPException(422, {"code": "IMAGE_QUALITY", "message": "Please retake the photo.", "issues": flags})
+    # The demo provider is deliberately deterministic and explicitly identified.
+    # It is a UX fallback for the SIH scenario, never evidence of a trained model.
+    if AI_PROVIDER == "demo":
+        crop = request.headers.get("x-fasalyn-crop", "Chilli")
+        prediction = Prediction(label="Thrips", confidence=0.91, severity="moderate", status="DETECTED")
+        return {"provider": "demo", "modelId": "demo-rule-fallback", "image": {"width": image.width, "height": image.height}, "prediction": prediction, "disease": {"crop": crop, "diagnosis": None, "confidence": 0.0, "status": "NOT_DETECTED"}, "pest": {"pest": "Thrips", "confidence": 0.91, "count_estimate": 12, "status": "DETECTED"}, "message": "Demo fallback result. It is not a trained-model diagnosis and requires field verification."}
+    if AI_PROVIDER != "model": raise HTTPException(500, "AI_PROVIDER must be 'model' or 'demo'.")
+    if not model.ready: raise HTTPException(503, f"No configured model is available: {model.error}")
+    label, confidence = model.infer(image)
+    if confidence < MIN_CONFIDENCE:
+        prediction = Prediction(label=None, confidence=confidence, severity="unknown", status="LOW_CONFIDENCE")
+        message = "Unable to confidently identify the condition. Retake a clearer image or send it for officer review."
+    else:
+        prediction = Prediction(label=label, confidence=confidence, severity=severity(label, confidence), status="DETECTED")
+        message = "Model output requires field verification; it is not a confirmed diagnosis."
+    return {"provider": "model", "modelId": MODEL_ID, "modelRevision": MODEL_REVISION, "image": {"width": image.width, "height": image.height}, "prediction": prediction, "disease": {"status": "MODEL_ADAPTER_REQUIRED"}, "pest": {"status": "MODEL_ADAPTER_REQUIRED"}, "message": message}

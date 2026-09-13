@@ -23,6 +23,12 @@ npm run dev
 
 Open `http://localhost:5174`. The API listens at `http://localhost:4000`.
 
+The root URL opens the fully interactive judge demo. It intentionally works
+without credentials or a model download: changing P5's trap count recalculates
+the transparent subplot risk map; you can submit a follow-up and validate the
+case from the officer queue. The authenticated production workspace remains at
+`/dashboard`.
+
 Run the AI boundary separately:
 
 ```powershell
@@ -30,6 +36,11 @@ python -m venv ai-service/.venv
 ai-service/.venv/Scripts/pip install -r ai-service/requirements.txt
 ai-service/.venv/Scripts/uvicorn main:app --app-dir ai-service --reload --port 8000
 ```
+
+Set `AI_PROVIDER=demo` to use the explicitly-labelled deterministic demo
+fallback. Set `AI_PROVIDER=model` (the default) plus `DISEASE_MODEL_ID` only
+when a real evaluated artifact is available. Demo mode must not be described
+as trained inference.
 
 ## API
 
