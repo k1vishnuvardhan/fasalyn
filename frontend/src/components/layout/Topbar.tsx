@@ -35,11 +35,11 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4 ml-auto relative">
-        <label className="hidden sm:flex items-center gap-2 rounded-lg border border-subtle bg-card px-2 py-1.5 text-sm text-textSub" title={t('preferredLanguage')}>
-          <Languages className="h-4 w-4 text-emeraldMain" />
+      <div className="flex items-center gap-2 sm:gap-4 ml-auto relative">
+        <label className="flex items-center gap-1 sm:gap-2 rounded-lg border border-subtle bg-card px-1.5 sm:px-2 py-1 sm:py-1.5 text-xs sm:text-sm text-textSub cursor-pointer hover:bg-cardHover transition-colors" title={t('preferredLanguage')}>
+          <Languages className="h-4 w-4 text-emeraldMain shrink-0" />
           <span className="sr-only">{t('preferredLanguage')}</span>
-          <select aria-label={t('preferredLanguage')} className="bg-transparent text-textMain outline-none" value={language} onChange={(event) => setLanguage(event.target.value)}>
+          <select aria-label={t('preferredLanguage')} className="bg-transparent text-textMain outline-none cursor-pointer" value={language} onChange={(event) => setLanguage(event.target.value)}>
             <option value="en">English</option>
             <option value="te">తెలుగు</option>
             <option value="hi">हिन्दी</option>
