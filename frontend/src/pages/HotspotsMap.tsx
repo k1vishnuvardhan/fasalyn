@@ -162,17 +162,17 @@ export default function HotspotsMap() {
   if (error) return <div className="p-8 text-center text-danger">Failed to load hotspots. Please try again.</div>;
 
   return (
-    <div className={clsx("relative flex flex-col transition-all duration-300", isFullscreen ? "h-screen w-screen fixed inset-0 z-[9999]" : "h-[calc(100vh-8rem)] min-h-[600px]")}>
+    <div className={clsx("relative flex flex-col transition-all duration-300", isFullscreen ? "h-screen w-screen fixed inset-0 z-[9999]" : "h-[calc(100vh-8rem)] min-h-[400px]")}>
       
       {/* Background Map Container */}
       <div ref={container} className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl border border-subtle" />
 
       {/* Floating Header Panel (Glassmorphism) */}
-      <div className="absolute top-6 left-6 z-[500] pointer-events-none">
+      <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-auto z-[500] pointer-events-none">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="pointer-events-auto backdrop-blur-xl bg-background/70 border border-white/10 p-5 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] max-w-sm"
+          className="pointer-events-auto backdrop-blur-xl bg-background/70 border border-white/10 p-4 sm:p-5 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] w-full sm:max-w-sm"
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2.5 bg-emeraldMain/20 rounded-xl text-emeraldMain">
@@ -206,7 +206,7 @@ export default function HotspotsMap() {
       {/* Fullscreen Toggle */}
       <button 
         onClick={toggleFullscreen}
-        className="absolute top-6 right-6 z-[500] p-3 backdrop-blur-xl bg-background/70 border border-white/10 rounded-xl shadow-lg hover:bg-background/90 transition-colors text-textSub hover:text-textMain"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[500] p-3 backdrop-blur-xl bg-background/70 border border-white/10 rounded-xl shadow-lg hover:bg-background/90 transition-colors text-textSub hover:text-textMain"
       >
         <Maximize2 size={20} />
       </button>
@@ -215,10 +215,10 @@ export default function HotspotsMap() {
       <AnimatePresence>
         {selectedHotspot && (
           <motion.div 
-            initial={{ opacity: 0, x: 50, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 50, scale: 0.95 }}
-            className="absolute bottom-6 right-6 z-[500] w-full max-w-sm"
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-[500] sm:w-[400px]"
           >
             <div className="backdrop-blur-xl bg-background/85 border border-white/10 p-5 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
               <button 
