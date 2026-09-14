@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API = import.meta.env.VITE_API_URL || 'https://fasalyn-api.onrender.com/api'
 function error(payload, fallback) { return payload?.error?.message || payload?.detail?.message || payload?.detail || fallback }
 async function request(path, options = {}) { const response = await fetch(`${API}${path}`, options); const payload = await response.json().catch(() => null); if (!response.ok) { if (response.status === 401 && !path.startsWith('/auth/')) { signOut(); window.location.assign('/login') } throw new Error(error(payload, 'The request could not be completed.')); } return payload }
 export function authHeaders() { const token = localStorage.getItem('token') || localStorage.getItem('fasalyn-token'); return token ? { Authorization: `Bearer ${token}` } : {} }

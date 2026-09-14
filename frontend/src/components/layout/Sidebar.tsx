@@ -31,20 +31,27 @@ const FARMER_NAV_ITEMS = [
   { icon: MessageSquare, labelKey: 'aiAssistant', path: '/assistant' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
   const user = useAuthStore((state) => state.user);
   const { t } = useI18n();
   const navItems = user?.role === 'OFFICER' ? [{ icon: ClipboardCheck, labelKey: 'officerDesk', path: '/officer' }] : FARMER_NAV_ITEMS;
 
   return (
-    <aside 
-      className={cn(
-        'hidden md:flex flex-col bg-sidebar text-[#e8e4db] transition-all duration-300 relative h-screen z-20 border-r border-[#152e21]',
-        collapsed ? 'w-20' : 'w-64'
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       )}
-    >
-      {/* Logo Area */}
+      <aside 
+        className={cn(
+          'flex flex-col bg-sidebar text-[#e8e4db] transition-all duration-300 h-screen border-r border-[#152e21]',
+          'fixed md:relative z-50 md:z-20',
+          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+          collapsed ? 'w-20' : 'w-64'
+        )}
+      >
+        {/* Logo Area */}
       <div className="flex h-16 items-center px-4 border-b border-white/10">
         <div className="flex items-center gap-3 overflow-hidden text-[#a8d5b7]">
           <Sprout className="h-8 w-8 flex-shrink-0" />

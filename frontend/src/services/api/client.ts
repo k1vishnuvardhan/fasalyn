@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API = import.meta.env.VITE_API_URL || 'https://fasalyn-api.onrender.com/api';
 
 function extractError(payload: any, fallback: string): string {
   return payload?.error?.message || payload?.detail?.message || payload?.detail || fallback;

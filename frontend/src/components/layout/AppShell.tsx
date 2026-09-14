@@ -5,11 +5,12 @@ import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
 
 export function AppShell() {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   return (
     <div className="flex h-[100dvh] w-full bg-background overflow-hidden text-textMain selection:bg-emeraldMain/20">
-      <Sidebar />
+      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
-        <Topbar />
+        <Topbar onMenuClick={() => setMobileMenuOpen(true)} />
         
         {/* Main scrollable content area */}
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 pb-24 sm:p-6 md:pb-6 scroll-smooth">
@@ -17,8 +18,6 @@ export function AppShell() {
             <Outlet />
           </div>
         </main>
-
-        <MobileNav />
       </div>
     </div>
   );

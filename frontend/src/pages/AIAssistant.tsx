@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/auth';
 import { translateText } from '../services/multilingual';
 import { useI18n } from '../i18n/I18nProvider';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API = import.meta.env.VITE_API_URL || 'https://fasalyn-api.onrender.com/api';
 
 type Message = { id: string; role: 'user' | 'model'; text: string; translatedText?: string };
 

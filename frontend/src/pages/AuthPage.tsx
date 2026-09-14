@@ -5,7 +5,7 @@ import { loginAccount, registerAccount } from '../services/api';
 import { useAuthStore } from '../store/auth';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API = import.meta.env.VITE_API_URL || 'https://fasalyn-api.onrender.com/api';
 type AccountRole = 'FARMER' | 'OFFICER';
 
 export default function AuthPage() {

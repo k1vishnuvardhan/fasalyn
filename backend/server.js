@@ -130,20 +130,7 @@ app.post('/api/scans', auth('FARMER'), upload.single('image'), async (req, res) 
   await run('INSERT INTO scans VALUES (?,?,?,?,?,?,?,?,?)', [scan.id, plot.id, req.user.id, scan.imageKey, req.file.mimetype, 'PROCESSING', null, null, scan.createdAt])
   let inference
   if (req.user.environment === 'demo' && process.env.AI_PROVIDER === 'demo') inference = { modelId: 'demo-model-v1', prediction: { label: 'Rice Blast', confidence: 0.96, severity: 'high', simulated: true }, detail: 'Demo Simulation' }
-  else { 
-    try { 
-      const response = await fetch(`${aiUrl}/infer`, { method: 'POST', headers: { 'content-type': req.file.mimetype, 'x-fasalyn-crop': plot.crop }, body: req.file.buffer, signal: AbortSignal.timeout(5_000) }); 
-      inference = await response.json().catch(() => null); 
-      if (!response.ok) throw new Error('AI API Error');
-    } catch { 
-      console.warn("AI Service unreachable, activating SIH Mock Demo Mode!");
-      inference = { 
-        modelId: 'mock-sih-fallback-v1', 
-        prediction: { label: plot.crop === 'Tomato' ? 'Tomato_Blight' : (plot.crop === 'Cotton' ? 'Cotton_Bollworm' : 'Healthy_Crop'), confidence: 0.92, severity: plot.crop === 'Rice' ? 'low' : 'high', pest_or_disease: plot.crop === 'Cotton' ? 'PEST' : 'DISEASE', is_actionable_label: true }, 
-        message: 'This is a mock diagnosis because the live PyTorch AI service is turned off in the cloud to bypass the credit card limit. Live ML inference is demonstrated in our local video!' 
-      };
-    } 
-  }
+  else { try { const response = await fetch(`${aiUrl}/infer`, { method: 'POST', headers: { 'content-type': req.file.mimetype, 'x-fasalyn-crop': plot.crop }, body: req.file.buffer, signal: AbortSignal.timeout(60_000) }); inference = await response.json().catch(() => null); if (!response.ok) { await run('UPDATE scans SET status=? WHERE id=?', ['MODEL_UNAVAILABLE', scan.id]); return fail(res, response.status === 503 ? 503 : 502, 'MODEL_UNAVAILABLE', inference?.detail || 'Model inference is unavailable; no diagnosis was created.') } } catch { await run('UPDATE scans SET status=? WHERE id=?', ['MODEL_UNAVAILABLE', scan.id]); return fail(res, 503, 'MODEL_UNAVAILABLE', 'Model inference timed out or is unavailable; no diagnosis was created.') } }
   await run('UPDATE scans SET status=?,model_id=?,result_json=? WHERE id=?', ['COMPLETED', inference.modelId, JSON.stringify(inference), scan.id])
   const risk = await riskForPlot(plot, inference.prediction, scan.id)
   const advisory = await createAdvisory({ scanId: scan.id, plotId: plot.id, prediction: inference.prediction, risk, source: inference.modelId === 'demo-model-v1' ? 'DEMO' : 'SYSTEM' })
@@ -227,28 +214,24 @@ app.post('/api/translate', auth('FARMER', 'OFFICER', 'EXPERT', 'ADMIN'), async (
   const body = parse(z.object({ text: z.string().min(1), sourceLanguage: z.string().optional(), targetLanguage: z.string().optional(), source: z.string().optional(), target: z.string().optional() }).transform(value => ({ text: value.text, source: value.sourceLanguage || value.source || 'en', target: value.targetLanguage || value.target || 'te' })), req.body, res);
   if (!body) return;
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(body.text)}&langpair=${body.source}|${body.target}`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    const result = await response.json();
-    if (result.responseStatus !== 200) return fail(res, 503, 'TRANSLATION_UNAVAILABLE', 'Translation failed.');
-    res.json({ success: true, sourceLanguage: body.source, targetLanguage: body.target, translatedText: result.responseData.translatedText, provider: 'MyMemory API (Node)' });
+    const response = await fetch(`${aiUrl}/translate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(60_000) });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) return fail(res, response.status === 422 ? 422 : 503, result?.detail?.code || 'TRANSLATION_UNAVAILABLE', result?.detail?.message || 'Translation service is unavailable.');
+    res.json({ success: true, sourceLanguage: body.source, targetLanguage: body.target, translatedText: result.translatedText, provider: result.provider, model: result.model || null });
   } catch (error) {
     fail(res, 503, 'TRANSLATION_UNAVAILABLE', 'Translation service is unavailable.');
   }
 });
-
 app.post('/api/tts', auth('FARMER', 'OFFICER', 'EXPERT', 'ADMIN'), async (req, res) => {
   const body = parse(z.object({ text: z.string().min(1), language: z.string().default('te') }), req.body, res);
   if (!body) return;
   try {
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(body.text.substring(0, 200))}&tl=${body.language}&client=tw-ob`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('TTS Failed');
-    const buffer = await response.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-    res.json({ audioBase64: base64, mimeType: 'audio/mpeg' });
-  } catch(e) {
-    fail(res, 503, 'TTS_UNAVAILABLE', 'TTS failed.');
+    const response = await fetch(`${aiUrl}/tts`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
+    const result = await response.json().catch(() => null);
+    if (!response.ok) return fail(res, response.status === 422 ? 422 : 503, result?.detail?.code || 'TTS_UNAVAILABLE', result?.detail?.message || 'Text-to-speech service is unavailable.');
+    res.json(result);
+  } catch (error) {
+    fail(res, 503, 'TTS_UNAVAILABLE', 'Text-to-speech service is unavailable.');
   }
 });
 app.get('/api/analytics/farmer', auth('FARMER'), async (req, res) => { const scans = await many(`SELECT substr(s.created_at,1,10) day, count(*) count FROM scans s JOIN plots p ON s.plot_id=p.id JOIN farms f ON p.farm_id=f.id WHERE f.farmer_id=? AND s.status='COMPLETED' GROUP BY day ORDER BY day`, [req.user.id]); const traps = await many(`SELECT substr(t.observed_at,1,10) day, sum(t.count) count FROM trap_observations t JOIN plots p ON t.plot_id=p.id JOIN farms f ON p.farm_id=f.id WHERE f.farmer_id=? GROUP BY day ORDER BY day`, [req.user.id]); res.json({ scans, traps }) })

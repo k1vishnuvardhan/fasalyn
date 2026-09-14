@@ -1,18 +1,19 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
-import { Bell, Languages, Search, User as UserIcon } from 'lucide-react';
+import { Bell, Languages, Search, User as UserIcon, Menu } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { useAuthStore } from '../../store/auth';
 import { useI18n } from '../../i18n/I18nProvider';
 
-export function Topbar() {
+export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const user = useAuthStore((state) => state.user);
   const { language, setLanguage, t } = useI18n();
   return (
     <header className="h-16 flex items-center justify-between px-4 sm:px-6 bg-background/95 backdrop-blur-sm border-b border-subtle z-40 sticky top-0">
       
       {/* Mobile Title */}
-      <div className="md:hidden flex items-center gap-2">
+      <div className="md:hidden flex items-center gap-3">
+        <button onClick={onMenuClick} className="p-1 -ml-1 text-textSub hover:text-textMain"><Menu size={24} /></button>
         <span className="text-base font-semibold tracking-[.12em] text-textMain">FASALYN</span>
       </div>
 
