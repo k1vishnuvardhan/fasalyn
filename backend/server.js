@@ -227,24 +227,28 @@ app.post('/api/translate', auth('FARMER', 'OFFICER', 'EXPERT', 'ADMIN'), async (
   const body = parse(z.object({ text: z.string().min(1), sourceLanguage: z.string().optional(), targetLanguage: z.string().optional(), source: z.string().optional(), target: z.string().optional() }).transform(value => ({ text: value.text, source: value.sourceLanguage || value.source || 'en', target: value.targetLanguage || value.target || 'te' })), req.body, res);
   if (!body) return;
   try {
-    const response = await fetch(`${aiUrl}/translate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(60_000) });
-    const result = await response.json().catch(() => null);
-    if (!response.ok) return fail(res, response.status === 422 ? 422 : 503, result?.detail?.code || 'TRANSLATION_UNAVAILABLE', result?.detail?.message || 'Translation service is unavailable.');
-    res.json({ success: true, sourceLanguage: body.source, targetLanguage: body.target, translatedText: result.translatedText, provider: result.provider, model: result.model || null });
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(body.text)}&langpair=${body.source}|${body.target}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    const result = await response.json();
+    if (result.responseStatus !== 200) return fail(res, 503, 'TRANSLATION_UNAVAILABLE', 'Translation failed.');
+    res.json({ success: true, sourceLanguage: body.source, targetLanguage: body.target, translatedText: result.responseData.translatedText, provider: 'MyMemory API (Node)' });
   } catch (error) {
     fail(res, 503, 'TRANSLATION_UNAVAILABLE', 'Translation service is unavailable.');
   }
 });
+
 app.post('/api/tts', auth('FARMER', 'OFFICER', 'EXPERT', 'ADMIN'), async (req, res) => {
   const body = parse(z.object({ text: z.string().min(1), language: z.string().default('te') }), req.body, res);
   if (!body) return;
   try {
-    const response = await fetch(`${aiUrl}/tts`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
-    const result = await response.json().catch(() => null);
-    if (!response.ok) return fail(res, response.status === 422 ? 422 : 503, result?.detail?.code || 'TTS_UNAVAILABLE', result?.detail?.message || 'Text-to-speech service is unavailable.');
-    res.json(result);
-  } catch (error) {
-    fail(res, 503, 'TTS_UNAVAILABLE', 'Text-to-speech service is unavailable.');
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(body.text.substring(0, 200))}&tl=${body.language}&client=tw-ob`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('TTS Failed');
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    res.json({ audioBase64: base64, mimeType: 'audio/mpeg' });
+  } catch(e) {
+    fail(res, 503, 'TTS_UNAVAILABLE', 'TTS failed.');
   }
 });
 app.get('/api/analytics/farmer', auth('FARMER'), async (req, res) => { const scans = await many(`SELECT substr(s.created_at,1,10) day, count(*) count FROM scans s JOIN plots p ON s.plot_id=p.id JOIN farms f ON p.farm_id=f.id WHERE f.farmer_id=? AND s.status='COMPLETED' GROUP BY day ORDER BY day`, [req.user.id]); const traps = await many(`SELECT substr(t.observed_at,1,10) day, sum(t.count) count FROM trap_observations t JOIN plots p ON t.plot_id=p.id JOIN farms f ON p.farm_id=f.id WHERE f.farmer_id=? GROUP BY day ORDER BY day`, [req.user.id]); res.json({ scans, traps }) })
