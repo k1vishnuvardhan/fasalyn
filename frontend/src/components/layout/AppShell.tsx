@@ -12,6 +12,12 @@ export function AppShell() {
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         <Topbar onMenuClick={() => setMobileMenuOpen(true)} />
         
+        {/* Prototype Warning Banner */}
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm text-amber-500/90 z-30 relative shadow-sm shrink-0">
+          <span className="shrink-0 text-amber-500">⚠️</span>
+          <span><strong className="text-amber-500 font-semibold">Prototype Mode:</strong> Live AI inference is currently simulated due to cloud hosting constraints.</span>
+        </div>
+        
         {/* Main scrollable content area */}
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 pb-24 sm:p-6 md:pb-6 scroll-smooth">
           <div className="max-w-7xl mx-auto min-h-full">
