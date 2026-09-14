@@ -20,7 +20,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 sm:px-6 bg-background/95 backdrop-blur-sm border-b border-subtle z-40 sticky top-0">
+    <header className="h-16 flex items-center justify-between px-4 sm:px-6 bg-background/95 backdrop-blur-sm border-b border-subtle z-[9995] sticky top-0">
       
       {/* Mobile Title */}
       <div className="md:hidden flex items-center gap-3">
@@ -53,7 +53,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-danger ring-2 ring-background" />
           </button>
           {showNotifs && (
-            <div className="absolute right-0 mt-2 w-64 bg-card border border-subtle rounded-xl shadow-xl py-2 z-50">
+            <div className="absolute right-0 mt-2 w-64 bg-card border border-subtle rounded-xl shadow-xl py-2 z-[9999]">
               <div className="px-4 py-2 border-b border-subtle font-medium">Notifications</div>
               <div className="px-4 py-3 text-sm flex gap-3 hover:bg-cardHover cursor-pointer">
                 <Info className="h-4 w-4 text-emeraldMain shrink-0 mt-0.5" />
@@ -87,7 +87,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
           </button>
           {showProfile && (
-            <div className="absolute right-0 mt-2 w-56 bg-card border border-subtle rounded-xl shadow-xl py-2 z-50">
+            <div className="absolute right-0 mt-2 w-56 bg-card border border-subtle rounded-xl shadow-xl py-2 z-[9999]">
               <div className="px-4 py-2 border-b border-subtle mb-1">
                 <div className="font-medium">{user?.name || 'User'}</div>
                 <div className="text-xs text-textMuted">{user?.email || 'user@example.com'}</div>
@@ -103,7 +103,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       
       {/* Click outside overlay to close dropdowns */}
       {(showProfile || showNotifs) && (
-        <div className="fixed inset-0 z-40" onClick={() => { setShowProfile(false); setShowNotifs(false); }} />
+        <div className="fixed inset-0 z-[9990]" onClick={() => { setShowProfile(false); setShowNotifs(false); }} />
       )}
     </header>
   );

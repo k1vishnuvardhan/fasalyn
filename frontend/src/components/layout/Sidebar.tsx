@@ -41,12 +41,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () =>
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+        <div className="md:hidden fixed inset-0 bg-black/50 z-[9990]" onClick={onClose} />
       )}
       <aside 
         className={cn(
           'flex flex-col bg-sidebar text-[#e8e4db] transition-all duration-300 h-screen border-r border-[#152e21]',
-          'fixed md:relative z-50 md:z-20',
+          'fixed md:relative z-[9999] md:z-20',
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           collapsed ? 'w-20' : 'w-64'
         )}
