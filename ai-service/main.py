@@ -175,11 +175,10 @@ async def infer(request: Request):
     crop_header = request.headers.get("x-fasalyn-crop", "")
     result: dict[str, Any] = {"timestamp": datetime.now(timezone.utc).isoformat(), "image": {"width": image.width, "height": image.height}, "prediction": {"label": None, "confidence": None, "confidenceCalibrated": False, "severity": "unknown", "status": "UNAVAILABLE"}, "classification": {"status": "UNAVAILABLE"}, "disease": {"status": "UNAVAILABLE"}, "pest": {"status": "UNAVAILABLE", "detections": []}, "models": [], "message": "No verified model assessment is available for this image."}
     if disease_model.ready:
-        label, confidence = disease_model.infer(image); status = "CLASSIFIED" if confidence >= MIN_CONFIDENCE else "LOW_CONFIDENCE"; conflict = label_conflicts_with_crop(label, crop_header); actionable = is_actionable_label(label) and not conflict; result["classification"] = {"status": status if actionable else ("CROP_MISMATCH" if conflict else "UNVERIFIED_LABEL"), "label": label, "rawScore": confidence, "confidenceCalibrated": False}; result["models"].append({"id": DISEASE_MODEL_ID, "revision": DISEASE_MODEL_REVISION, "task": "classification", "device": DEVICE})
+        label, confidence = disease_model.infer(image); status = "CLASSIFIED" if confidence >= MIN_CONFIDENCE else "LOW_CONFIDENCE"; actionable = is_actionable_label(label); result["classification"] = {"status": status if actionable else "UNVERIFIED_LABEL", "label": label, "rawScore": confidence, "confidenceCalibrated": False}; result["models"].append({"id": DISEASE_MODEL_ID, "revision": DISEASE_MODEL_REVISION, "task": "classification", "device": DEVICE})
         if actionable and is_pest_label(label): result["pest"] = {"status": status, "label": label, "rawScore": confidence, "detections": []}
         elif actionable: result["disease"] = {"status": status, "label": label, "rawScore": confidence}
         if confidence >= MIN_CONFIDENCE and actionable: result["prediction"] = {"label": label, "confidence": None, "confidenceCalibrated": False, "severity": "unknown", "status": "DETECTED"}; result["message"] = "Whole-image classification output; it does not locate or count individual pests. Field verification is required."
-        elif conflict: result["message"] = "The model label names a crop that does not match the selected subplot. Select the correct crop or request officer review; no diagnosis was created."
         elif not is_actionable_label(label): result["message"] = "The model returned an unverified taxonomy label. No farmer diagnosis or automated treatment was created."
     if pest_model.ready:
         detections = pest_model.infer(image); result["pest"] = {"status": "DETECTED" if detections else "NO_DETECTION", "detections": detections}; result["models"].append({"id": PEST_MODEL_ID or Path(PEST_MODEL_PATH).name, "task": "object_detection", "device": DEVICE, "classes": list(pest_model.model.names.values())})
@@ -191,13 +190,13 @@ async def infer(request: Request):
     return result
 
 @app.post("/translate")
-async def translate_text(req: TranslateRequest):
+def translate_text(req: TranslateRequest):
     translated = translation_model.translate(req.text, req.source, req.target)
     model = TRANSLATION_EN_INDIC_MODEL if req.source == "en" else TRANSLATION_INDIC_EN_MODEL
     return {"success": True, "translatedText": translated, "provider": "IndicTrans2", "model": model, "sourceLanguage": req.source, "targetLanguage": req.target}
 
 @app.post("/tts")
-async def generate_tts(req: TTSRequest):
+def generate_tts(req: TTSRequest):
     try:
         from gtts import gTTS
         buffer = io.BytesIO(); gTTS(text=req.text, lang=req.language).write_to_fp(buffer)

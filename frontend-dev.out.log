@@ -188,3 +188,137 @@
 [1] 
 [1] Node.js v24.12.0
 [1] Failed running 'server.js'. Waiting for file changes before restarting...
+[1] Restarting 'server.js'
+[1] node:events:486
+[1]       throw er; // Unhandled 'error' event
+[1]       ^
+[1] 
+[1] Error: listen EADDRINUSE: address already in use :::4000
+[1]     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+[1]     at listenInCluster (node:net:1997:12)
+[1]     at Server.listen (node:net:2102:7)
+[1]     at app.listen (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\express\lib\application.js:635:24)
+[1]     at file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/server.js:217:21
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[1] Emitted 'error' event on Server instance at:
+[1]     at emitErrorNT (node:net:1976:8)
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+[1]   code: 'EADDRINUSE',
+[1]   errno: -4091,
+[1]   syscall: 'listen',
+[1]   address: '::',
+[1]   port: 4000
+[1] }
+[1] 
+[1] Node.js v24.12.0
+[1] Failed running 'server.js'. Waiting for file changes before restarting...
+[1] Restarting 'server.js'
+[1] node:events:486
+[1]       throw er; // Unhandled 'error' event
+[1]       ^
+[1] 
+[1] Error: listen EADDRINUSE: address already in use :::4000
+[1]     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+[1]     at listenInCluster (node:net:1997:12)
+[1]     at Server.listen (node:net:2102:7)
+[1]     at app.listen (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\express\lib\application.js:635:24)
+[1]     at file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/server.js:224:21
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[1] Emitted 'error' event on Server instance at:
+[1]     at emitErrorNT (node:net:1976:8)
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+[1]   code: 'EADDRINUSE',
+[1]   errno: -4091,
+[1]   syscall: 'listen',
+[1]   address: '::',
+[1]   port: 4000
+[1] }
+[1] 
+[1] Node.js v24.12.0
+[1] Failed running 'server.js'. Waiting for file changes before restarting...
+[1] Restarting 'server.js'
+[1] file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:392
+[1]         return new LibsqlError(e.message, e.code, e.rawCode, e);
+[1]                ^
+[1] 
+[1] LibsqlError: SQLITE_BUSY: database is locked
+[1]     at mapSqliteError (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:392:16)
+[1]     at executeStmt (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:297:15)
+[1]     at Sqlite3Client.batch (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:87:13)
+[1]     ... 5 lines matching cause stack trace ...
+[1]     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+[1]   code: 'SQLITE_BUSY',
+[1]   rawCode: 5,
+[1]   [cause]: SqliteError: database is locked
+[1]       at convertError (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\libsql\index.js:59:12)
+[1]       at Statement.run (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\libsql\index.js:335:13)
+[1]       at executeStmt (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:290:34)
+[1]       at Sqlite3Client.batch (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:87:13)
+[1]       at initDb (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/db.js:10:12)
+[1]       at file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/server.js:233:7
+[1]       at ModuleJob.run (node:internal/modules/esm/module_job:413:25)
+[1]       at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[1]       at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
+[1]       at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+[1]     code: 'SQLITE_BUSY',
+[1]     rawCode: 5
+[1]   }
+[1] }
+[1] 
+[1] Node.js v24.12.0
+[1] Failed running 'server.js'. Waiting for file changes before restarting...
+[1] Restarting 'server.js'
+[1] node:events:486
+[1]       throw er; // Unhandled 'error' event
+[1]       ^
+[1] 
+[1] Error: listen EADDRINUSE: address already in use :::4000
+[1]     at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+[1]     at listenInCluster (node:net:1997:12)
+[1]     at Server.listen (node:net:2102:7)
+[1]     at app.listen (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\express\lib\application.js:635:24)
+[1]     at file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/server.js:240:21
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[1] Emitted 'error' event on Server instance at:
+[1]     at emitErrorNT (node:net:1976:8)
+[1]     at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+[1]   code: 'EADDRINUSE',
+[1]   errno: -4091,
+[1]   syscall: 'listen',
+[1]   address: '::',
+[1]   port: 4000
+[1] }
+[1] 
+[1] Node.js v24.12.0
+[1] Failed running 'server.js'. Waiting for file changes before restarting...
+[1] Restarting 'server.js'
+[1] file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:392
+[1]         return new LibsqlError(e.message, e.code, e.rawCode, e);
+[1]                ^
+[1] 
+[1] LibsqlError: SQLITE_BUSY: database is locked
+[1]     at mapSqliteError (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:392:16)
+[1]     at executeStmt (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:297:15)
+[1]     at Sqlite3Client.batch (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:87:13)
+[1]     ... 5 lines matching cause stack trace ...
+[1]     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+[1]   code: 'SQLITE_BUSY',
+[1]   rawCode: 5,
+[1]   [cause]: SqliteError: database is locked
+[1]       at convertError (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\libsql\index.js:59:12)
+[1]       at Statement.run (C:\Users\VISHNUVARDHAN\Downloads\fasalyn 2\backend\node_modules\libsql\index.js:335:13)
+[1]       at executeStmt (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:290:34)
+[1]       at Sqlite3Client.batch (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/node_modules/@libsql/client/lib-esm/sqlite3.js:87:13)
+[1]       at initDb (file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/db.js:10:12)
+[1]       at file:///C:/Users/VISHNUVARDHAN/Downloads/fasalyn%202/backend/server.js:240:7
+[1]       at ModuleJob.run (node:internal/modules/esm/module_job:413:25)
+[1]       at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[1]       at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
+[1]       at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+[1]     code: 'SQLITE_BUSY',
+[1]     rawCode: 5
+[1]   }
+[1] }
+[1] 
+[1] Node.js v24.12.0
+[1] Failed running 'server.js'. Waiting for file changes before restarting...
