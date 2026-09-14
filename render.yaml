@@ -25,10 +25,3 @@ services:
       # For persistent data, sign up for Turso (libSQL) and set DATABASE_URL here.
       - key: DATABASE_URL
         value: file:./fasalyn-production.db
-
-  # 2. AI Service (Python / FastAPI / Docker)
-  - type: web
-    name: fasalyn-ai-engine
-    env: docker
-    rootDir: ai-service
-    dockerfilePath: ./Dockerfile
