@@ -7,7 +7,8 @@
     "dev:all": "concurrently \"npm run dev --prefix frontend -- --host 127.0.0.1\" \"npm run dev --prefix backend\" \"npm run dev:ai\"",
     "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "build": "npm install --prefix backend",
-    "start": "npm start --prefix backend"
+    "start": "npm start --prefix backend",
+    "postinstall": "npm install --prefix backend"
   },
   "devDependencies": { "concurrently": "^9.1.2" }
 }
