@@ -3,9 +3,11 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
+import { useI18n } from '../../i18n/I18nProvider';
 
 export function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { t } = useI18n();
   return (
     <div className="flex h-[100dvh] w-full bg-background overflow-hidden text-textMain selection:bg-emeraldMain/20">
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
@@ -15,7 +17,7 @@ export function AppShell() {
         {/* Prototype Warning Banner */}
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm text-amber-500/90 z-30 relative shadow-sm shrink-0">
           <span className="shrink-0 text-amber-500">⚠️</span>
-          <span><strong className="text-amber-500 font-semibold">Prototype Mode:</strong> Live AI inference is currently simulated due to cloud hosting constraints.</span>
+          <span><strong className="text-amber-500 font-semibold">{t('prototypeNoticeTitle')}:</strong> {t('prototypeNoticeText')}</span>
         </div>
         
         {/* Main scrollable content area */}

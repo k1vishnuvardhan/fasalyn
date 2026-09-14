@@ -186,7 +186,9 @@ export const translations = {
     yourPlots: "Your plots",
     noPlotsYet: "No plots yet",
     createFarmPlotToBegin: "Create a farm and plot to begin recording field data.",
-    cropStageNotRecorded: "Crop stage not recorded"
+    cropStageNotRecorded: "Crop stage not recorded",
+    prototypeNoticeTitle: "Prototype Mode",
+    prototypeNoticeText: "Live AI inference is currently simulated due to cloud hosting constraints."
   },
   te: {
     dashboard: "డాష్‌బోర్డ్",
@@ -374,7 +376,9 @@ export const translations = {
     yourPlots: "మీ ప్లాట్‌లు",
     noPlotsYet: "ఇంకా ప్లాట్‌లు లేవు",
     createFarmPlotToBegin: "ఫీల్డ్ డేటాను నమోదు చేయడం ప్రారంభించడానికి పొలం మరియు ప్లాట్‌ను సృష్టించండి.",
-    cropStageNotRecorded: "పంట దశ నమోదు కాలేదు"
+    cropStageNotRecorded: "పంట దశ నమోదు కాలేదు",
+    prototypeNoticeTitle: "నమూనా మోడ్",
+    prototypeNoticeText: "క్లౌడ్ హోస్టింగ్ పరిమితుల కారణంగా లైవ్ AI అంచనా ప్రస్తుతం అనుకరించబడింది."
   },
   hi: {
     dashboard: "डैशबोर्ड",
@@ -421,6 +425,8 @@ export const translations = {
     vegetative: "वनस्पति अवस्था",
     flowering: "फूल अवस्था",
     fruiting: "फल अवस्था",
-    harvest: "कटाई"
+    harvest: "कटाई",
+    prototypeNoticeTitle: "प्रोटोटाइप मोड",
+    prototypeNoticeText: "क्लाउड होस्टिंग सीमाओं के कारण लाइव एआई अनुमान वर्तमान में सिम्युलेटेड है।"
   }
 };
