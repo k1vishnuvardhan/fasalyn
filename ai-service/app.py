@@ -202,3 +202,7 @@ def generate_tts(req: TTSRequest):
         buffer = io.BytesIO(); gTTS(text=req.text, lang=req.language).write_to_fp(buffer)
         return {"audioBase64": base64.b64encode(buffer.getvalue()).decode("ascii"), "mimeType": "audio/mpeg", "language": req.language, "provider": "gTTS"}
     except Exception as exc: raise HTTPException(503, {"code": "TTS_UNAVAILABLE", "message": "Text-to-speech provider is unavailable.", "detail": str(exc)})
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=7860)

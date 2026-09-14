@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix frontend -- --host 127.0.0.1\" \"npm run dev --prefix backend\"",
-    "dev:ai": "ai-service\\.runenv\\Scripts\\python.exe -m uvicorn main:app --app-dir ai-service --host 127.0.0.1 --port 8000",
+    "dev:ai": "ai-service\\.runenv\\Scripts\\python.exe -m uvicorn app:app --app-dir ai-service --host 127.0.0.1 --port 8000",
     "dev:all": "concurrently \"npm run dev --prefix frontend -- --host 127.0.0.1\" \"npm run dev --prefix backend\" \"npm run dev:ai\"",
     "install:all": "npm install --prefix frontend && npm install --prefix backend"
   },
