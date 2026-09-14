@@ -1,0 +1,27 @@
+services:
+  # 1. API Backend (Node.js / Express)
+  - type: web
+    name: fasalyn-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
+      - key: AI_SERVICE_URL
+        # Set this to your Hugging Face Space URL (e.g. https://yourusername-fasalyn-ai.hf.space)
+        value: "REPLACE_WITH_HUGGING_FACE_URL"
+      - key: FRONTEND_ORIGIN
+        # Update this to your Vercel URL once the frontend is deployed
+        value: https://fasalyn.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OFFICER_REGISTRATION_CODE
+        value: OFFICER2026
+      - key: OFFICER_SELF_REGISTRATION
+        value: "true"
+      # Using a local SQLite file. On free tier, this will reset on deploy. 
+      # For persistent data, sign up for Turso (libSQL) and set DATABASE_URL here.
+      - key: DATABASE_URL
+        value: file:./fasalyn-production.db

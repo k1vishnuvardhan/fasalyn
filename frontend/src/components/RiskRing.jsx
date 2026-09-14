@@ -1,1 +1,0 @@
-export default function RiskRing({value=78,label='Farm Health'}) { return <div className="ring" style={{'--p':`${value*3.6}deg`}}><div><strong>{value}</strong><span>{label}</span><em>{value>70?'GOOD':'WATCH'}</em></div></div> }

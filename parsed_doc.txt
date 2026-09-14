@@ -1,0 +1,457 @@
+KRISHIBODH
+AI-Powered Crop Health and Risk Intelligence Platform
+TEAM DEVELOPMENT & PROJECT DOCUMENTATION
+Smart India Hackathon (SIH) Project
+Team Name: CODEFORGE
+Core Loop
+ 
+      
+       
+       
+       
+DETECT → PREDICT → ACT → VERIFY → ESCALATE → WARN
+KrishiBodh
+ — Team Development Documentation 
+1. Executive Summary
+KrishiBodh
+ is an AI-powered crop-health and risk-intelligence platform designed to support farmers and agricultural officers. The platform is intended to go beyond simple leaf-disease classification by combining crop images, pest-trap observations, farm and subplot information, weather, crop growth stage, farm history, nearby pest signals and follow-up observations.
+The system first detects a crop disease or pest, then estimates risk, identifies potentially affected neighboring subplots, provides an actionable advisory, verifies the situation through follow-up observations, and escalates important cases to an agriculture officer. Regional signals can then be aggregated anonymously to support hotspot intelligence.
+The documentation emphasizes a practical prototype: large datasets should not be downloaded or trained blindly. Instead, manageable subsets, transfer learning, lightweight 
+inference,
+ and a transparent demo fallback should be used when full ML training is not immediately practical.
+2. Problem Statement
+Farmers may notice disease or pest symptoms only after crop damage becomes significant. A system that only identifies a disease from a single image does not provide enough context to understand farm-level risk, neighboring subplot pressure, weather conditions, historical trends or what action should be taken next.
+KrishiBodh
+ addresses this gap by combining multiple sources of evidence into one connected decision-support platform.
+3. Project Objectives
+Detect crop diseases and insect pests from images.
+Record pest-trap observations as time-series data.
+Represent farms as manageable subplots such as P1–P9.
+Combine pest pressure, weather, crop stage, history and spatial proximity into a transparent risk score.
+Predict elevated pest risk in neighboring subplots within configurable monitoring windows.
+Provide structured, expert-reviewed recommendations instead of unrestricted AI-generated chemical instructions.
+Support follow-up verification and identify improving, stable, 
+worsening,
+ or review-required cases.
+Provide an agriculture officer portal for validation, 
+correction
+, 
+and escalation.
+Generate anonymized regional hotspot intelligence
+.
+Support offline data capture and synchronization without claiming offline AI inference.
+4. System Vision and Core Workflow
+    
+KrishiBodh connects the following information flow:
+ Crop Image
+ ↓
+ 
+ Pest Trap
+ ↓
+ 
+ Farm / Subplot
+ ↓
+ 
+ Weather
+ ↓
+ 
+ Crop Stage
+ ↓
+ 
+Farm History
+ ↓
+ 
+ Nearby Cases
+ ↓
+ 
+ AI Diagnosis
+ ↓
+ 
+Risk Intelligence
+ ↓
+ 
+Actionable Advisory
+ ↓
+ 
+ Follow-up
+ ↓
+ 
+Officer Validation
+ ↓
+ 
+ Regional Warning
+Core Operational Loop:
+DETECT → PREDICT → ACT → VERIFY → ESCALATE → WARN
+5. System Architecture
+The prototype uses a 
+separate
+ frontend, backend, AI inference 
+service,
+ and database architecture. This separation keeps model inference independent from the user interface and allows the AI model to be replaced later without redesigning the frontend.
+Layer
+Technology
+Purpose
+Frontend
+React + Vite + Tailwind CSS + PWA
+Farmer and officer interfaces, dashboard, subplot map, diagnosis and risk visualization
+Backend
+Node.js + Express
+REST APIs, authentication, business logic, case management and database access
+AI Service
+Python + 
+PyTorch
+ + 
+FastAPI
+ (if required)
+Disease/pest inference, preprocessing and confidence handling
+Database
+MongoDB Atlas
+Users, farms, subplots, observations, cases, risk and follow-up records
+Maps
+Leaflet + OpenStreetMap
+Farm/subplot and regional visualization
+Weather
+Open-
+Meteo
+ through backend abstraction
+Current and forecast weather context
+Explanation Layer
+Gemini through backend
+Simplifying structured results and multilingual explanations
+6. Team Modules
+Module
+Responsibilities
+Developer 1 — Frontend
+Farmer UI, navigation, dashboard, farm/subplot screens, diagnosis UI, risk visualization, responsive design and PWA.
+Developer 2 — Backend
+Express server, authentication, REST APIs, MongoDB, case management, risk and officer endpoints.
+Developer 3 — AI
+Disease model, pest model, image preprocessing, 
+inference of
+ API, confidence handling and AI-service integration.
+Developer 4 — Risk/Prediction
+Risk engine, pest-trap time series, subplot relationships, neighboring risk, risk windows and weather integration.
+Developer 5 — Officer/Intelligence
+Officer dashboard, validation, follow-up, escalation, hotspot aggregation and notifications.
+7. Dataset and Model Sources
+The project documentation identifies three main data sources. These sources serve different purposes and should not be treated as one combined dataset without careful preprocessing and leakage checks.
+IP102 — Primary Pest Detection Dataset
+GitHub: 
+https://github.com/xpwu95/IP102
+Used for insect-pest recognition. It contains 75,000+ pest images, 102 pest 
+categories,
+ and approximately 19,000 images with bounding-box annotations. For the prototype, use only classes relevant to supported crops and a manageable subset with transfer learning. IP102 should be used according to its stated academic-use terms and should not be presented as unrestricted commercial data.
+SAGE — Primary Crop Disease Dataset
+Hugging Face: 
+https://huggingface.co/datasets/tirtho149/SAGE
+Used primarily for crop-disease recognition. The documented dataset contains 820,504 images, 335 crops and 1,251 crop × disease classes, with plant-organ, symptom, pathogen, disease-type and provenance information. Use streaming or selected subsets rather than downloading the complete dataset into the repository.
+Digital Green Crop Disease Images — Real-World Validation
+Hugging Face: 
+https://huggingface.co/datasets/DigiGreen/Crop_Disease_Images
+Used primarily for validation and realistic farmer-image testing. The documented source contains 989 photographs, 1,026 expert annotations and 74 crop types, with India-heavy coverage. It should not be the only training source.
+8. Dataset Handling Strategy
+Do not download or train on massive datasets blindly.
+Select supported crops and relevant disease/pest classes.
+Create a reproducible subset for the prototype.
+Keep TRAIN
+, 
+VALIDATION,
+ and TEST data clearly separated.
+Avoid data leakage where images or source datasets overlap.
+Record class names, mappings, preprocessing and dataset attribution.
+Do not commit datasets or model weights into Git.
+9. AI Model Design
+9.1 Disease Model
+Input: farmer crop image.
+Expected structured output: {"crop": "Tomato", "diagnosis": "Early Blight", "confidence": 0.91, "severity": "Moderate"}
+9.2 Pest Model
+Input: farmer crop image or pest-trap image.
+Expected structured output: {"pest": "Thrips", "confidence": 0.88, "
+count_estimate
+": 12, "
+subplot_id
+": "P5"}
+Disease and pest detection should remain logically 
+separated
+. The system should handle disease detected, pest detected, both detected, healthy/
+unknown,
+ and low-confidence results.
+When confidence is below a configurable threshold, the system should avoid an overly confident diagnosis, mark the case for 
+review,
+ and allow agriculture officer validation.
+10. Subplot and Pest-Propagation Intelligence
+A major innovation of the prototype is the ability to divide a farm into subplots and reason 
+for
+ neighboring pest risk. A simple grid is sufficient; precise GPS coordinates are not required.
+Example farm grid:
+P1 | P2 | P3
+P4 | P5 | P6
+P7 | P8 | P9
+11. Pest-Trap Observation
+Subplot
+Pest type
+Trap count
+Observation date/time
+Optional trap image
+Crop
+Crop growth stage
+Example: P5 → Thrips → trap count 18 → Chilli → Flowering. Every observation should be stored as a time-series record.
+12. Spatial Risk Engine
+The risk engine should estimate the risk that neighboring subplots will experience elevated pest pressure within a monitoring window. It must not claim to know the exact biological time of pest spread.
+Risk factors:
+Current pest count
+Historical pest count and trend
+Pest type
+Distance between subplots
+Neighboring subplot pressure
+Crop similarity
+Crop growth stage
+Temperature
+Humidity
+Rainfall
+Wind direction/speed when available
+Previous observations
+Nearby confirmed cases
+Configurable 
+prediction of
+ windows: 24 hours, 48 hours, 72 
+hours,
+ and 5 days.
+The UI should label the output as "Predicted Pest Risk", not "Guaranteed Pest Spread Time
+."
+13. Prototype Risk Scoring
+Conceptual structure:
+Current Pest Pressure + Weather Suitability + Neighboring Pest Pressure + Historical Trend + Crop/Growth Stage Suitability + Spatial Proximity → Predicted Risk
+Normally,
+ the final score to 0–100.
+Score
+Risk Level
+0–24
+Low
+25–49
+Moderate
+50–74
+High
+75–100
+Critical
+These thresholds and weights are prototype parameters, not universal agricultural standards, and should remain configurable.
+14. Recommendation and Advisory Engine
+The recommendation engine should first use a structured, expert-reviewed knowledge base or rule layer. An external language model may then explain the approved recommendation in simple or multilingual language.
+Immediate observation
+Cultural practices
+Integrated Pest Management
+Biological controls
+Safe input guidance
+Monitoring recommendation
+Follow-up date
+Officer escalation
+The system must not allow an unrestricted LLM to invent pesticide dosage or chemical instructions.
+15. Weather Integration
+Weather should be accessed through a backend service abstraction such as 
+weatherService.getCurrentWeather
+(location) and 
+weatherService.getForecast
+(location). This prevents the frontend from being tied directly to a single weather provider.
+For prototype/demo mode, mock weather data may be provided when no API configuration is available.
+16. Offline Input Queue
+Offline functionality does not mean offline AI inference. Farmers can create observations and queue images/form data locally using IndexedDB. Once connectivity returns, the queue synchronizes with the backend, where AI and risk processing occur.
+Saved offline
+Waiting to sync
+Syncing
+Synced
+Failed
+17. Follow-Up and Response Intelligence
+Important cases should have follow-up records containing the original risk, original pest count, severity, recommended action, follow-up date, follow-up pest count, new 
+risk,
+ and response status.
+Improving
+Stable
+Worsening
+Needs Officer Review
+If risk worsens, the case should automatically receive higher priority in the Agriculture Officer Portal.
+18. Agriculture Officer Portal
+The officer dashboard should show:
+Priority cases
+AI diagnosis and confidence
+Pest-trap counts
+Subplot risk map
+Weather factors
+Predicted neighboring risk
+Follow-up status
+Case history
+Regional hotspots
+Officer actions:
+Confirm
+Correct
+Request more information
+Send verified advisory
+Escalate
+Close case
+Officer corrections must be stored separately from the original AI prediction and must never overwrite it.
+19. Database Design
+User
+Farm
+Subplot
+Crop
+PestObservation
+TrapObservation
+Diagnosis
+Risk Assessment
+Propagation Prediction
+Advisory
+Follow-up
+Officer Validation
+Regional Signal
+Notification
+Core relationship:
+Farm → Subplots → Trap/Pest Observations and Risk Assessments; Farm → Cases → Diagnosis → Advisory → Follow-Up → Officer Validation
+20. Frontend and API Design Rules
+Reusable frontend components should include:
+RiskCard
+DiagnosisCard
+SubplotGrid
+TrapChart
+WeatherCard
+AdvisoryCard
+CaseStatus
+Map
+API calls should go through service modules such as:
+authService
+farmService
+diagnosisService
+trapService
+riskService
+caseService
+O
+fficerService
+ 
+Each API/UI flow should handle loading, success, validation failure, network error, server error, and offline state.
+21. Demonstration Scenario
+Demo Farm: Chilli
+ 
+F
+arm
+Subplots: P1–P9
+P5: Thrips trap count = 18; high pest pressure.
+Weather: high humidity and suitable temperature.
+Expected prototype result: P5 = High/Critical, P4 = High, P6 = High, P8 = Moderate/High.
+The interface must clearly distinguish "ACTUAL OBSERVATION" from "PREDICTED RISK". A judge should be able to move through the complete flow from farmer login to regional anonymous signal.
+1. Farmer Login
+2. Open Farm
+3. View P1–P9
+4. Select P5
+5. Upload Chilli Image
+6. AI detects pest/disease
+7. Enter Trap Count = 18
+8. Retrieve Weather
+9. Risk Engine calculates risk
+10. P4/P6/P8 receive predicted risk
+11. Farmer receives advisory
+12. Follow-up submitted
+13. Case worsens
+14. Officer receives alert
+15. Officer validates case
+16. Regional anonymous signal generated
+22. Model Fallback and Demo Mode
+The application should remain runnable when trained models are unavailable. It should expose a real model inference interface and a transparent demo/mock inference mode, for example AI_PROVIDER=model or AI_PROVIDER=demo.
+The UI should indicate demo/model mode where appropriate. The project must never claim that a model was trained when it is not actually available.
+23. Responsible AI
+Communicate uncertainty clearly.
+Use high, 
+moderate,
+ and low confidence categories.
+Recommend expert review for low-confidence results.
+Do not present AI output as guaranteed truth.
+Do not claim that AI replaces agricultural officers.
+Keep officer corrections separate from original AI predictions.
+24. Security, Environment and Git Practices
+Never commit secrets. Environment variables include:
+MONGO_URI
+JWT_SECRET
+GEMINI_API_KEY
+AI_SERVICE_URL
+Use. env
+ locally and commit 
+only .
+env
+.example
+.
+Recommended repository structure:
+/
+Ai
+-service
+/
+Backend
+/
+Frontend
+/
+Models
+/
+Data
+-processing
+/
+Docs
+Use feature branches and test locally before merging into 
+the main
+.
+25. Definition of Done
+UI exists.
+Backend API exists where required.
+Database persistence works.
+Loading and error states work.
+Mobile layout works.
+API contract is documented.
+Demo data works.
+The existing
+ features are not broken.
+26. Final Success Criteria
+1. Create a farm.
+2. Divide the farm into subplots.
+3. Select a crop.
+4. Submit a crop/pest image.
+5. Get a disease/pest prediction.
+6. Add pest-trap observations to a specific subplot.
+7. See current pest pressure.
+8. See predicted neighboring subplot risk.
+9. See factors behind the prediction.
+10. Receive an actionable advisory.
+11. See multilingual advice.
+12. Submit a follow-up.
+13. See whether the condition improved or worsened.
+14. See the 
+case
+ in the Agriculture Officer Portal.
+15. Have the officer 
+validated
+ or 
+corrected
+ the result.
+16. See anonymized regional risk/hotspot information.
+27. Conclusion
+KrishiBodh
+ is designed as one connected crop-health and risk-intelligence platform rather than a collection of independent features. Its main value comes from connecting detection with subplot-level pest observations, contextual risk assessment, actionable advisory, follow-up 
+verification,
+ and officer validation. The prototype should prioritize a reliable end-to-end workflow, transparent risk logic, responsible AI 
+behavior,
+ and clear separation between real observations and predictions.
+Every developer should think: “I am building one part of 
+KrishiBodh
+, not a separate application.” Frontend, backend, AI, risk engine and officer portal must communicate through clearly defined contracts.
+28. Dataset / Technology References
+IP102: 
+https://github.com/xpwu95/IP102
+SAGE Dataset: 
+https://huggingface.co/datasets/tirtho149/SAGE
+Digital Green Crop Disease Images: 
+https://huggingface.co/datasets/DigiGreen/Crop_Disease_Images
+Open-
+Mateo
+: Weather service used through backend abstraction
+Leaflet + OpenStreetMap: Mapping layer
+React, Vite, Tailwind CSS, Node.js, Express, Python, 
+PyTorch
+, 
+FastAPI
+ and MongoDB Atlas: Project technology stack
+KrishiBodh
+ — Team Development Documentation 

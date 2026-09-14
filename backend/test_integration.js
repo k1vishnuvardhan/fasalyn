@@ -91,9 +91,52 @@ async function runTests() {
     assert.ok(health.plots[0].latestRisk)
     console.log('Spatial health retrieved OK.')
 
-    console.log('All tests passed successfully!')
+    console.log('All core tests passed successfully!')
+
+    // 7. Test Demo Isolation
+    console.log('Testing demo isolation...')
+    const demoEmail = `demo-${Date.now()}@example.com`
+    const demoRegRes = await fetch(`${api}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: demoEmail, password: 'password1234', name: 'Demo Farmer', environment: 'demo' })
+    })
+    const demoReg = await demoRegRes.json()
+    assert.equal(demoRegRes.status, 201)
+    assert.equal(demoReg.user.environment, 'demo')
+    const demoToken = demoReg.token
+
+    const demoFarmRes = await fetch(`${api}/farms`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${demoToken}` },
+      body: JSON.stringify({ id: randomUUID(), name: 'Demo Farm', crop: 'Cotton' })
+    })
+    const demoFarm = await demoFarmRes.json()
+    assert.equal(demoFarmRes.status, 201)
+
+    // Make regular user an officer to query farms
+    const { run } = await import('./db.js')
+    await run('UPDATE users SET role=? WHERE id=?', ['OFFICER', user.id])
+    
+    // Regular officer should NOT see demo farm
+    const offRes = await fetch(`${api}/officer/farms`, { headers: { Authorization: `Bearer ${token}` } })
+    const offFarms = await offRes.json()
+    assert.ok(!offFarms.some(f => f.id === demoFarm.id), 'Production officer should not see demo farm')
+
+    // Demo user should be able to reset their environment
+    const resetRes = await fetch(`${api}/demo/reset`, { method: 'DELETE', headers: { Authorization: `Bearer ${demoToken}` } })
+    assert.equal(resetRes.status, 200)
+    
+    // Verify reset
+    const demoFarmCheck = await fetch(`${api}/farms`, { headers: { Authorization: `Bearer ${demoToken}` } })
+    const demoFarms = await demoFarmCheck.json()
+    assert.equal(demoFarms.length, 0, 'Demo reset should delete demo farms')
+
+    console.log('Demo isolation tests passed successfully!')
+
   } catch (err) {
     console.error('Test failed:', err)
+    process.exitCode = 1
   }
 }
 
