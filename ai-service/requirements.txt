@@ -8,4 +8,3 @@ transformers>=4.40,<5
 sentencepiece>=0.2
 ultralytics>=8.3
 gTTS>=2.5
-IndicTransToolkit==1.1.1
