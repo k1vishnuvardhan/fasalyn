@@ -114,7 +114,36 @@ class PestModelAdapter:
                 detections.append({"className": str(self.model.names[class_id]), "classId": class_id, "confidence": confidence, "bbox": {"x": x1, "y": y1, "width": x2-x1, "height": y2-y1}})
         return detections
 
-disease_model, pest_model = DiseaseModelAdapter(), PestModelAdapter()
+class IndicTranslationAdapter:
+    def __init__(self): self.models = {}; self.tokenizers = {}; self.processor = None; self.errors = {}
+    def load(self, direction):
+        if direction in self.models or direction in self.errors: return
+        model_id = TRANSLATION_EN_INDIC_MODEL if direction == "en-te" else TRANSLATION_INDIC_EN_MODEL
+        try:
+            import torch
+            from IndicTransToolkit.processor import IndicProcessor
+            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+            global DEVICE
+            DEVICE = "cuda" if os.getenv("FORCE_CPU") != "1" and torch.cuda.is_available() else "cpu"
+            self.tokenizers[direction] = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True, token=HF_TOKEN)
+            self.models[direction] = AutoModelForSeq2SeqLM.from_pretrained(model_id, trust_remote_code=True, token=HF_TOKEN).to(DEVICE).eval()
+            self.processor = IndicProcessor(inference=True)
+        except Exception as exc: self.errors[direction] = str(exc)
+    def translate(self, text, source, target):
+        if source == target: return text
+        direction = f"{source}-{target}"
+        if direction not in {"en-te", "te-en"}: raise HTTPException(422, "Only English and Telugu are supported.")
+        self.load(direction)
+        if direction not in self.models:
+            raise HTTPException(503, {"code": "TRANSLATION_UNAVAILABLE", "message": "IndicTrans2 is unavailable.", "detail": self.errors.get(direction)})
+        import torch
+        src, tgt = ("eng_Latn", "tel_Telu") if direction == "en-te" else ("tel_Telu", "eng_Latn")
+        batch = self.processor.preprocess_batch([text], src_lang=src, tgt_lang=tgt)
+        encoded = self.tokenizers[direction](batch, truncation=True, padding=True, return_tensors="pt").to(DEVICE)
+        with torch.inference_mode(): generated = self.models[direction].generate(**encoded, max_new_tokens=256, num_beams=4)
+        return self.processor.postprocess_batch(self.tokenizers[direction].batch_decode(generated, skip_special_tokens=True), lang=tgt)[0]
+
+disease_model, pest_model, translation_model = DiseaseModelAdapter(), PestModelAdapter(), IndicTranslationAdapter()
 @app.on_event("startup")
 def startup(): disease_model.load(); pest_model.load()
 
@@ -131,7 +160,7 @@ def health(): return {"ready": disease_model.ready or pest_model.ready, "device"
 
 @app.get("/model-status")
 def model_status():
-    return {"diseaseModel": {"loaded": disease_model.ready, "model": DISEASE_MODEL_ID or None, "revision": DISEASE_MODEL_REVISION, "task": "classification", "device": DEVICE, "error": disease_model.error}, "pestModel": {"loaded": pest_model.ready, "model": PEST_MODEL_ID or (Path(PEST_MODEL_PATH).name if PEST_MODEL_PATH else None), "task": "object_detection", "device": DEVICE, "error": pest_model.error, "classes": list(pest_model.model.names.values()) if pest_model.ready else []}, "translation": {"provider": "MyMemory API (Cloud)", "enToTeLoaded": True, "teToEnLoaded": True, "errors": {}}}
+    return {"diseaseModel": {"loaded": disease_model.ready, "model": DISEASE_MODEL_ID or None, "revision": DISEASE_MODEL_REVISION, "task": "classification", "device": DEVICE, "error": disease_model.error}, "pestModel": {"loaded": pest_model.ready, "model": PEST_MODEL_ID or (Path(PEST_MODEL_PATH).name if PEST_MODEL_PATH else None), "task": "object_detection", "device": DEVICE, "error": pest_model.error, "classes": list(pest_model.model.names.values()) if pest_model.ready else []}, "translation": {"provider": "IndicTrans2", "enToTeLoaded": "en-te" in translation_model.models, "teToEnLoaded": "te-en" in translation_model.models, "errors": translation_model.errors}}
 
 @app.post("/infer")
 async def infer(request: Request):
@@ -162,15 +191,9 @@ async def infer(request: Request):
 
 @app.post("/translate")
 def translate_text(req: TranslateRequest):
-    import urllib.request, urllib.parse, json
-    try:
-        url = f"https://api.mymemory.translated.net/get?q={urllib.parse.quote(req.text)}&langpair={req.source}|{req.target}"
-        with urllib.request.urlopen(url) as response:
-            res = json.loads(response.read().decode())
-            translated = res["responseData"]["translatedText"]
-        return {"success": True, "translatedText": translated, "provider": "MyMemory API", "model": "API", "sourceLanguage": req.source, "targetLanguage": req.target}
-    except Exception as e:
-        raise HTTPException(503, {"code": "TRANSLATION_UNAVAILABLE", "message": "MyMemory API failed.", "detail": str(e)})
+    translated = translation_model.translate(req.text, req.source, req.target)
+    model = TRANSLATION_EN_INDIC_MODEL if req.source == "en" else TRANSLATION_INDIC_EN_MODEL
+    return {"success": True, "translatedText": translated, "provider": "IndicTrans2", "model": model, "sourceLanguage": req.source, "targetLanguage": req.target}
 
 @app.post("/tts")
 def generate_tts(req: TTSRequest):
