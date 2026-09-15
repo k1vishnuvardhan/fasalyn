@@ -43,6 +43,10 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <option value="en">English</option>
             <option value="te">తెలుగు</option>
             <option value="hi">हिन्दी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="ml">മലയാളം</option>
+            <option value="mr">मराठी</option>
           </select>
         </label>
         
