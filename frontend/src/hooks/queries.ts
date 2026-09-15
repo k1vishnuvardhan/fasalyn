@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFarms, getPlots, getDashboard, uploadScan, getRisk, getTraps } from '../services/api';
+import { getFarms, getPlots, getDashboard, uploadScan, getRisk, getTraps, getAnalytics } from '../services/api';
 
 export function useFarms() {
   return useQuery({
@@ -20,6 +20,13 @@ export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
     queryFn: getDashboard,
+  });
+}
+
+export function useAnalytics() {
+  return useQuery({
+    queryKey: ['analytics'],
+    queryFn: getAnalytics,
   });
 }
 

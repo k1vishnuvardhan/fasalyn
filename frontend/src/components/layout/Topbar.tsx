@@ -4,12 +4,14 @@ import { Bell, Languages, Search, User as UserIcon, Menu, LogOut, Info } from 'l
 import { Input } from '../ui/Input';
 import { useAuthStore } from '../../store/auth';
 import { useI18n } from '../../i18n/I18nProvider';
+import { useSearchStore } from '../../store/search';
 import { useNavigate } from 'react-router-dom';
 
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { language, setLanguage, t } = useI18n();
+  const { searchQuery, setSearchQuery } = useSearchStore();
   const navigate = useNavigate();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -31,7 +33,13 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
       {/* Global Search (Hidden on Mobile) */}
       <div className="hidden md:flex items-center w-full max-w-md relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textMuted" />
-        <Input type="search" placeholder={t('searchFarms')} className="pl-9 bg-card border-none focus-visible:ring-1" />
+        <Input 
+          type="search" 
+          placeholder={t('searchFarms')} 
+          className="pl-9 bg-card border-none focus-visible:ring-1" 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {/* Actions */}
